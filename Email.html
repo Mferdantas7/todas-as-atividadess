@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validação de E-mail Simples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            text-align: left;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="email"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 300px; /* Largura fixa para exemplo */
+            box-sizing: border-box; /* Inclui padding e borda na largura */
+        }
+        input[type="email"]:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            text-align: left;
+            display: none; /* Escondido por padrão */
+        }
+        input[type="email"]:invalid + .error-message {
+            display: block; /* Mostra a mensagem de erro quando o input é inválido */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Validar E-mail</h2>
+        <form id="emailForm">
+            <label for="email">Endereço de E-mail:</label>
+            <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="seuemail@exemplo.com"
+                required
+                pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
+                title="Por favor, insira um endereço de e-mail válido (ex: seuemail@dominio.com)"
+            >
+            <span class="error-message" id="emailError">Por favor, insira um e-mail válido.</span>
+
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <script>
+        const emailInput = document.getElementById('email');
+        const emailError = document.getElementById('emailError');
+        const emailForm = document.getElementById('emailForm');
+
+        // Adiciona um listener para o evento 'input' (a cada digitação)
+        emailInput.addEventListener('input', function (event) {
+            if (emailInput.validity.valid) {
+                // Se o campo for válido, esconde a mensagem de erro personalizada
+                emailError.style.display = 'none';
+            } else {
+                // Se o campo for inválido, mostra a mensagem de erro
+                emailError.style.display = 'block';
+            }
+        });
+
+        // Adiciona um listener para o evento 'submit' do formulário
+        emailForm.addEventListener('submit', function (event) {
+            // Previne o envio padrão do formulário
+            event.preventDefault();
+
+            if (emailInput.validity.valid) {
+                // Se o e-mail for válido, você pode fazer algo aqui, como:
+                // - Enviar os dados para o backend (usando fetch ou XMLHttpRequest)
+                // - Mostrar uma mensagem de sucesso
+                alert('E-mail válido e enviado: ' + emailInput.value);
+                // Por exemplo, para enviar para um backend (descomente para usar):
+                /*
+                fetch('/validate-email', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: emailInput.value }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Sucesso:', data);
+                    alert('Resposta do backend: ' + data.message);
+                })
+                .catch((error) => {
+                    console.error('Erro:', error);
+                    alert('Erro ao enviar e-mail para o backend.');
+                });
+                */
+                emailForm.reset(); // Limpa o formulário após o envio
+            } else {
+                // Se o e-mail for inválido, o navegador já mostra uma mensagem padrão
+                // mas nossa mensagem personalizada também estará visível devido ao CSS
+                // e ao listener de 'input'.
+                alert('Por favor, corrija o e-mail antes de enviar.');
+            }
+        });
+    </script>
+</body>
+</html>

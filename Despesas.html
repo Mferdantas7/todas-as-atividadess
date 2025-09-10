@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <label for="salario">Salario</label> 
+    <input type="number" id="salario"></input>
+
+    <label for="despesa1">Despesas1</label> 
+    <input type="number" id="despesa1"></input>
+
+    <label for="despesa2">Despesas2</label> 
+    <input type="number" id="despesa2"></input>
+
+    <label for="despesa3">Despesas</label> 
+    <input type="number" id="despesa3"></input>
+
+<button onclick="calcularsaldo()">Calcular saldo</button>
+
+<script>
+
+    function calcularsaldo(){
+
+        var salario = parseFloat(document.getElementById("salario").value);
+        var despesa1 = parseFloat(document.getElementById("despesa1").value);
+        var despesa2 = parseFloat(document.getElementById("despesa2").value);
+        var despesa3 = parseFloat(document.getElementById("despesa3").value);
+
+        var totalgasto = despesa1+despesa2+despesa3;
+        var percentual1=despesa1/totalgasto;
+        var percentual2=despesa2/totalgasto;
+        var percentual3=despesa3/totalgasto;
+        var saldo =salario-totalgasto;
+
+    document.getElementById("saldo").textContent = saldo.toFixed(2);
+    document.getElementById("percentual1").textContent = percentual1.toFixed(2);
+    document.getElementById("percentual2").textContent = percentual2.toFixed(2);
+    document.getElementById("percentual3").textContent = percentual3.toFixed(2);
+    }        
+        
+</script>
+<p> O Saldo é: <span id="saldo"></span> </p>
+<p> O percentual1 é: <span id="percentual1"></span> </p>
+<p> O percentual2 é: <span id="percentual2"></span> </p>
+<p> O percentual3 é: <span id="percentual3"></span> </p>
+
+</body>
+</html>
