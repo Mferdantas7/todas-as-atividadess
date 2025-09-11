@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Jogo de Carro 3D Neon</title>
+<style>
+body {
+  margin: 0; overflow: hidden; background: #0b0b0d; font-family: Arial, sans-serif;
+}
+#hud {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.5); padding: 10px 20px; border-radius: 8px;
+  color: #0ff; font-size: 20px; font-weight: bold;
+}
+#gameOver {
+  display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+  color: #0ff; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; font-size: 28px; font-family: Arial, sans-serif; z-index: 10;
+}
+#gameOver button {
+  margin-top: 15px; padding: 10px 20px; font-size: 18px;
+  border: none; border-radius: 6px; background: #0ff; color: #000; cursor: pointer;
+  transition: background 0.3s;
+}
+#gameOver button:hover { background: #06b; }
+</style>
+</head>
+<body>
+<div id="hud">Pontuação: <span id="score">0</span></div>
+<div id="gameOver">
+  <div id="msg">BATEU!</div>
+  <div>Pontuação: <span id="finalScore">0</span></div>
+  <button onclick="restart()">Reiniciar</button>
+</div>
+
+<audio id="ambient" src="motor.mp3" loop></audio>
+<audio id="motor" src="crash.mp3" loop></audio>
+
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.module.js';
+
+// --- Setup Renderer & Scene ---
+const renderer = new THREE.WebGLRenderer({antialias:true});
+document.body.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0b0b0d, 10, 50);
+
+// --- Camera ---
+const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0,6,12);
+camera.lookAt(0,0,0);
+
+// --- Lights ---
+const hemiLight = new THREE.HemisphereLight(0xffffff,0x111111,1);
+scene.add(hemiLight);
+const dirLight = new THREE.DirectionalLight(0x0ff,1);
+dirLight.position.set(5,10,5);
+scene.add(dirLight);
+
+// --- Carro Neon ---
+const carGeo = new THREE.BoxGeometry(1,1,2);
+const carMat = new THREE.MeshStandardMaterial({color:0x0ff, emissive:0x0ff, metalness:0.6, roughness:0.2});
+const car = new THREE.Mesh(carGeo,carMat);
+car.position.y = 0.5;
+scene.add(car);
+
+// --- Estrada ---
+const groundGeo = new THREE.PlaneGeometry(10,200,10,10);
+const groundMat = new THREE.MeshStandardMaterial({color:0x111, emissive:0x222, metalness:0.4, roughness:0.5});
+const ground = new THREE.Mesh(groundGeo,groundMat);
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
+
+// --- Obstáculos Neon ---
+const obstacles = [];
+let score = 0, gameOver = false, speed = 10, difficultyTimer=0;
+const scoreEl = document.querySelector('#score');
+const finalScore = document.querySelector('#finalScore');
+
+function spawnObstacle(){
+  const geo = new THREE.BoxGeometry(1,1,1);
+  const mat = new THREE.MeshStandardMaterial({color:0xff00ff, emissive:0xff00ff});
+  const obs = new THREE.Mesh(geo,mat);
+  const lane = Math.floor(Math.random()*3)-1;
+  obs.position.set(lane*2.5,0.5,-40);
+  scene.add(obs);
+  obstacles.push(obs);
+}
+
+// --- Controls ---
+let keys = {};
+document.addEventListener('keydown',e=>keys[e.key]=true);
+document.addEventListener('keyup',e=>keys[e.key]=false);
+
+// --- Audio ---
+const ambient = document.getElementById('ambient');
+const motor = document.getElementById('motor');
+function playAudio(){
+  ambient.play(); motor.play();
+}
+
+// --- Animate ---
+const clock = new THREE.Clock();
+let spawnTimer=0;
+
+function animate(){
+  if(gameOver) return;
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  spawnTimer += dt;
+  difficultyTimer += dt;
+
+  if(difficultyTimer>10){ speed += 2; difficultyTimer=0; }
+  if(spawnTimer>1.2){ spawnObstacle(); spawnTimer=0; }
+
+  if(keys['ArrowLeft']||keys['a']) car.position.x = Math.max(-2.5, car.position.x-0.2);
+  if(keys['ArrowRight']||keys['d']) car.position.x = Math.min(2.5, car.position.x+0.2);
+
+  obstacles.forEach((o,i)=>{
+    o.position.z += speed*dt;
+    if(o.position.z>10){
+      scene.remove(o);
+      obstacles.splice(i,1);
+      score += 10;
+      scoreEl.textContent = score;
+    }
+    if(Math.abs(o.position.x-car.position.x)<1 && Math.abs(o.position.z-car.position.z)<1.5){
+      endGame();
+    }
+  });
+
+  renderer.render(scene,camera);
+}
+
+// --- Game Over ---
+function endGame(){
+  gameOver = true;
+  finalScore.textContent = score;
+  document.querySelector('#gameOver').style.display = 'flex';
+}
+
+// --- Restart ---
+window.restart = function(){
+  obstacles.forEach(o=>scene.remove(o));
+  obstacles.length=0;
+  car.position.set(0,0.5,0);
+  score=0; speed=10; gameOver=false;
+  scoreEl.textContent=score;
+  document.querySelector('#gameOver').style.display='none';
+  animate();
+}
+
+// --- Resize ---
+function resize(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+}
+window.addEventListener('resize',resize);
+resize();
+
+// --- Start Game ---
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter') playAudio();
+});
+
+animate();
+</script>
+</body>
+</html>
+
